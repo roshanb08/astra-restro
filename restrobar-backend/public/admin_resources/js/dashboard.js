@@ -764,5 +764,4 @@ if ($("#ecommerceAnalyticDark").length) {
 
 
 
-  });
 })(jQuery);

@@ -157,7 +157,8 @@
             if (!country) return;
 
             // API URL
-            var apiUrl = "https://www.getcountrycurrency.com/api/country-currency/" + encodeURIComponent(country);
+            // var apiUrl = "https://www.getcountrycurrency.com/api/country-currency/" + encodeURIComponent(country);
+            var apiUrl = "https://restcountries.com/v3.1/name/" + encodeURIComponent(country);
 
             // Make AJAX request to fetch currency details
             $.ajax({
@@ -165,22 +166,35 @@
                 method: "GET",
                 dataType: "json",
                 success: function (data) {
+                    // debugger;
                     // Check if data contains expected fields
-                    if (data.currency_name && data.currency_code && data.currency_symbol) {
-                        // Decode the HTML entity for the currency symbol
-                        var parser = new DOMParser();
-                        var decodedSymbol = parser.parseFromString(data.currency_symbol, 'text/html').body.textContent;
+                    // if (data.currency_name && data.currency_code && data.currency_symbol) {
+                    //     // Decode the HTML entity for the currency symbol
+                    //     var parser = new DOMParser();
+                    //     var decodedSymbol = parser.parseFromString(data.currency_symbol, 'text/html').body.textContent;
                         
 
-                        // Populate the fields with currency details
-                        $('#decoded_symbol').val(decodedSymbol);
-                        $('#currency_code').val(data.currency_code);
-                        $('#currency_symbol').val(data.currency_symbol);
+                    //     // Populate the fields with currency details
+                    //     $('#decoded_symbol').val(decodedSymbol);
+                    //     $('#currency_code').val(data.currency_code);
+                    //     $('#currency_symbol').val(data.currency_symbol);
 
-                    } else {
-                        alert("Currency details not found for the selected country.");
-                        $('#currency_code, #currency_symbol, #decoded_symbol').val("");
+                    // } else {
+                    //     alert("Currency details not found for the selected country.");
+                    //     $('#currency_code, #currency_symbol, #decoded_symbol').val("");
 
+                    // }
+
+                    if(data[0].currencies){
+                        const currencies = data[0].currencies;
+                        const firstKey = Object.keys(currencies)[0]; // e.g. "NPR"
+
+                        const symbol = currencies[firstKey].symbol;
+                        const name = currencies[firstKey].name;
+
+                        $('#decoded_symbol').val(symbol);
+                        $('#currency_code').val(firstKey);
+                        $('#currency_symbol').val(symbol);
                     }
                 },
                 error: function (xhr, status, error) {
