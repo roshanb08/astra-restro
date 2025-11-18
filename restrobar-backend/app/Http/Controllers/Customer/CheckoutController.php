@@ -108,7 +108,7 @@ class CheckoutController extends Controller
         $data = session(self::SESSION_KEY, []);
         $data['pickup_location_id'] = $request->pickup_location_id;
         session([self::SESSION_KEY => $data]);
-        return redirect()->route('checkout.payment');
+        return redirect()->route('customer.checkout.payment');
     }
 
     /** Step 3b: Delivery */
@@ -374,7 +374,7 @@ public function deliveryPost(Request $request)
         $customerDetails = Session::get('customer_details', []);
         $order_no = session('order_no');
 
-        // Create the customer
+            // Create the customer
             $customer = Customer::create([
                 'name' =>  $customerDetails['name'],
                 'email' =>  $customerDetails['email'] ,
@@ -396,7 +396,8 @@ public function deliveryPost(Request $request)
    
             // Create a new order
             $order = Order::create([
-                'user_id' => $customer->id,
+                'user_id' => auth()->user()->id,
+                'customer_id' => $customer->id,
                 'order_no' => $order_no,
                 'order_type' => 'online',
                 'created_by_user_id' => null,

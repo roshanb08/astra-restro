@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'order_no',
         'user_id',
+        'customer_id',
         'order_type',
         'created_by_user_id',
         'updated_by_user_id',
@@ -31,7 +32,7 @@ class Order extends Model
     // Customer who placed the order
     public function customer()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     // Delivery address

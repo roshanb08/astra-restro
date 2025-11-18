@@ -131,7 +131,7 @@ Route::prefix('customer')->middleware(CheckRoleCustomer::class)->group(function 
     Route::get('/checkout/review', [CheckoutController::class, 'review'])->name('customer.checkout.review');
 
     // Step 4: Payment & review
-    Route::get('/checkout/payment', [CheckoutController::class, 'payment'])->name('customer.checkout.payment');
+    Route::get('/checkout/payment', [CheckoutController::class, 'review'])->name('customer.checkout.payment');
     Route::post('/checkout/payment', [CheckoutController::class, 'paymentPost'])->name('customer.checkout.payment.post');
 
     // Step 5: Confirmation
