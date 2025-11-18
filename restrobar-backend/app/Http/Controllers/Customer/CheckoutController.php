@@ -2,16 +2,25 @@
 
 namespace App\Http\Controllers\Customer;
 
+use Exception;
+use App\Models\Order;
 use App\Models\Address;
+use App\Mail\OrderEmail;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\OrderSettings;
 use App\Helpers\DistanceHelper;
 use Illuminate\Validation\Rule;
 use App\Models\RestaurantAddress;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Models\RestaurantPhoneNumber;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Traits\CartTrait;
+use App\Http\Requests\CustomerDetailsRequest;
 use App\Http\Controllers\Traits\OrderNumberGeneratorTrait;
 use App\Http\Controllers\Traits\MainSiteViewSharedDataTrait;
 
@@ -230,43 +239,43 @@ public function deliveryPost(Request $request)
     {
         $user = Auth::User();
 
-        $order_settings = OrderSettings::first();
+        // $order_settings = OrderSettings::first();
+        // if (!$order_settings) {
+        //     // OrderSettings has no data
+        //     return redirect()->route('home')->withErrors('No order settings found.');
+        // }
 
-        if (!$order_settings) {
-            // OrderSettings has no data
-            return redirect()->route('home')->withErrors('No order settings found.');
-        }
 
+        // $price_per_mile =   $order_settings->price_per_mile;
+        // $distance_limit_in_miles = $order_settings->distance_limit_in_miles;
 
-        $price_per_mile =   $order_settings->price_per_mile;
-        $distance_limit_in_miles = $order_settings->distance_limit_in_miles;
+        // $restaurant_address = $this->firstRestaurantAddress ?? config('site.address');
 
-        $restaurant_address = $this->firstRestaurantAddress ?? config('site.address');
+        // $delivery_address_id = session(self::SESSION_KEY)['addresses']['delivery_address_id'] ?? null;
 
-        $delivery_address_id = session(self::SESSION_KEY)['addresses']['delivery_address_id'] ?? null;
-
-        $delivery_address   = $user->addresses()->find($delivery_address_id);
+        // $delivery_address   = $user->addresses()->find($delivery_address_id);
         
-        $single_line_address = $delivery_address->full_address;
+        // $single_line_address = $delivery_address->full_address;
 
 
-        // Call the DistanceHelper to get the distance
-        $distanceData = DistanceHelper::getDistance($restaurant_address, $single_line_address);  
+        // // Call the DistanceHelper to get the distance
+        // $distanceData = DistanceHelper::getDistance($restaurant_address, $single_line_address);  
 
  
-        // Check if there's an error
-        if (isset($distanceData['error'])) {
-            return back()->withErrors($distanceData['error']);
-        }
+        // // Check if there's an error
+        // if (isset($distanceData['error'])) {
+        //     return back()->withErrors($distanceData['error']);
+        // }
 
-        $distance_in_miles= $distanceData['value_in_miles'];
+        // $distance_in_miles= $distanceData['value_in_miles'];
 
-        if ($distance_in_miles > $distance_limit_in_miles) {
-            $error_message = "We're sorry! We can only deliver within {$distance_limit_in_miles} miles. You can still place your order as a walk-in at our restaurant located at {$restaurant_address}. We look forward to serving you!";
-            return back()->withErrors($error_message)->withInput();
-        }
+        // if ($distance_in_miles > $distance_limit_in_miles) {
+        //     $error_message = "We're sorry! We can only deliver within {$distance_limit_in_miles} miles. You can still place your order as a walk-in at our restaurant located at {$restaurant_address}. We look forward to serving you!";
+        //     return back()->withErrors($error_message)->withInput();
+        // }
         
-        $delivery_fee = ceil($price_per_mile * $distance_in_miles * 100) / 100;
+        // $delivery_fee = ceil($price_per_mile * $distance_in_miles * 100) / 100;
+        $delivery_fee = 150;
 
 
      
@@ -309,34 +318,37 @@ public function deliveryPost(Request $request)
         }
 
 
-        $order_settings = OrderSettings::first();
+        // $order_settings = OrderSettings::first();
 
-        if (!$order_settings) {
-            // OrderSettings has no data
-            return redirect()->route('home')->withErrors('No order settings found.');
-        }
-        $price_per_mile =   $order_settings->price_per_mile;
-        $distance_limit_in_miles = $order_settings->distance_limit_in_miles;
+        // if (!$order_settings) {
+        //     // OrderSettings has no data
+        //     return redirect()->route('home')->withErrors('No order settings found.');
+        // }
+        // $price_per_mile =   $order_settings->price_per_mile;
+        // $distance_limit_in_miles = $order_settings->distance_limit_in_miles;
 
-        $restaurant_address = $this->firstRestaurantAddress ?? config('site.address');
-        $delivery_address   = $request->address . ' ' . $request->city . ' ' . $request->state . ' ' . $request->postcode;
+        // $restaurant_address = $this->firstRestaurantAddress ?? config('site.address');
+        // $delivery_address   = $request->address . ' ' . $request->city . ' ' . $request->state . ' ' . $request->postcode;
 
-        // Call the DistanceHelper to get the distance
-        $distanceData = DistanceHelper::getDistance($restaurant_address, $delivery_address);
+        // // Call the DistanceHelper to get the distance
+        // $distanceData = DistanceHelper::getDistance($restaurant_address, $delivery_address);
 
-        // Check if there's an error
-        if (isset($distanceData['error'])) {
-            return back()->withErrors($distanceData['error']);
-        }
+        // // Check if there's an error
+        // if (isset($distanceData['error'])) {
+        //     return back()->withErrors($distanceData['error']);
+        // }
 
-        $distance_in_miles= $distanceData['value_in_miles'];
+        // $distance_in_miles= $distanceData['value_in_miles'];
 
-        if ($distance_in_miles > $distance_limit_in_miles) {
-            $error_message = "We're sorry! We can only deliver within {$distance_limit_in_miles} miles. You can still place your order as a walk-in at our restaurant located at {$restaurant_address}. We look forward to serving you!";
-            return back()->withErrors($error_message)->withInput();
-        }
+        // if ($distance_in_miles > $distance_limit_in_miles) {
+        //     $error_message = "We're sorry! We can only deliver within {$distance_limit_in_miles} miles. You can still place your order as a walk-in at our restaurant located at {$restaurant_address}. We look forward to serving you!";
+        //     return back()->withErrors($error_message)->withInput();
+        // }
         
-        $delivery_fee = ceil($price_per_mile * $distance_in_miles * 100) / 100;
+        // $delivery_fee = ceil($price_per_mile * $distance_in_miles * 100) / 100;
+        $delivery_fee = 150;
+        $distance_in_miles = 10;
+        $price_per_mile = 20;
 
         // Store delivery_fee , price_per_mile and distance_in_miles in  session 
         session()->put('delivery_details', [ 'delivery_fee' => $delivery_fee, 'distance_in_miles' => $distance_in_miles,  'price_per_mile' => $price_per_mile, ]);
@@ -350,11 +362,100 @@ public function deliveryPost(Request $request)
 
 
         // redirect to payment route
-        return redirect()->route('payment');
+        // return redirect()->route('payment');
+        $order_pending = $this->placeOrderOffline();
+        $order = Order::with(['orderItems', 'customer'])->where('session_id', $order_pending->session_id)->first();
+        // dd($order);
+        return view('main-site.payment-success', compact('order')); 
+        return redirect()->route('home')->with('success', 'Order placed successfully.');
+    }
+
+    private function placeOrderOffline(){
+        $customerDetails = Session::get('customer_details', []);
+        $order_no = session('order_no');
+
+        // Create the customer
+            $customer = Customer::create([
+                'name' =>  $customerDetails['name'],
+                'email' =>  $customerDetails['email'] ,
+                'phone_number' => $customerDetails['phone_number'],
+                'address' => $customerDetails['address'] . " ".$customerDetails['city']." ".$customerDetails['state']." ".$customerDetails['postcode'],
+            ]);
+
+            $cart_items = session()->get('customer', []);
+            $totalPrice = 0;
+            foreach ($cart_items as $cart_item) {
+                $price = $cart_item['price'] * $cart_item['quantity'];
+                $totalPrice = $totalPrice + $price;
+            }
+            $delivery_fee = 150;
+            $delivery_distance = 10;
+            $price_per_mile = 20;
+
+            $totalPrice = $totalPrice + $delivery_fee;
+   
+            // Create a new order
+            $order = Order::create([
+                'user_id' => $customer->id,
+                'order_no' => $order_no,
+                'order_type' => 'online',
+                'created_by_user_id' => null,
+                'updated_by_user_id' => null,
+                'total_price' => $totalPrice,
+                'status' => 'pending',
+                'status_online_pay' => 'unpaid',
+                'session_id' => $order_no,
+                'payment_method' => "STRIPE",
+                'additional_info' => $customerDetails['additional_info'],
+                'delivery_fee' => $delivery_fee,
+                'delivery_distance' => $delivery_distance,
+                'price_per_mile' => $price_per_mile,
+                
+            ]);
+
+            if ($order) {
+                // Create order items using the relationship
+                foreach ($cart_items as $cart_item) {
+                    $order->orderItems()->create([
+                        'menu_name' => $cart_item['name'],  
+                        'quantity' => $cart_item['quantity'],
+                        'subtotal' => $cart_item['price'] * $cart_item['quantity'],
+                    ]);
+                }
+            }
+
+            try {
+                Mail::to($order->customer->email)->send(new OrderEmail(
+                    $order->orderItems,
+                    $order->customer->name,
+                    $order->customer->email,
+                    $order->order_no,
+                    $order->delivery_fee,
+                    $order->total_price,
+                    config('site.email'),
+                    RestaurantPhoneNumber::first() ? RestaurantPhoneNumber::first()->phone_number : null
+                ));
+            } catch (Exception $e) {
+                Log::error('Order email failed to send: ' . $e->getMessage());
+            }
+
+            // Clear the session
+            $this->clearOrderSession();
+            
+            return $order;
 
     }
     
     /** Helpers */
+    protected function clearOrderSession()
+    {
+        session()->forget([
+            'customer',
+            'customer_details',
+            'delivery_details',
+            'order_no'
+        ]);
+    }
     private function guardStep(string $key, $value = null): void
     {
         $data = session(self::SESSION_KEY, []);
